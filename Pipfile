@@ -8,6 +8,8 @@ ipykernel = "*"
 jupyter = "*"
 notebook = "*"
 black = "*"
+nasdaq-data-link = "*"
+pandas = "*"
 
 [dev-packages]
 
