@@ -68,7 +68,7 @@ df_HousingData.head()
 # *How will you use the identified data to answer your project question?*
 # 📝 <!-- Start Discussing the project here; you can add as many code cells as you need -->
 
-# In[11]:
+# In[1]:
 
 
 #imports
@@ -80,6 +80,11 @@ import seaborn as sns
 import nasdaqdatalink
 import os
 from dotenv import load_dotenv
+from sklearn.preprocessing import MinMaxScaler
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
 
 
 # Due to ongoing issues with the API I am going to be downloading the data into a CSV to use until support figures it out
@@ -238,11 +243,50 @@ plt.show()
 # 
 # 
 
+# # 4. Machine Learning Plan
+
+# ### 1. Type of Machine Learning Model:
+# 
+# I plan to use a Long Short-Term Memory (LSTM) neural network for time-series forecasting for my Machine Learning.
+# 
+# **Objective:**
+# My objective is to predict future values of CPI for groceries, gas prices, and housing price indices using the historical data which I already have.
+# 
+# **Why LSTM?**
+# LSTMs are perfect for time-series data, this is because they can capture long-term dependencies, trends, and temporal relationships that are challenging for traditional models. I decided on these after doing research into what models best suit data such as mine, as well as, with the goal in mind of predicting future values.
+# 
+# **Further EDA?**
+# I believe the data is already in a place from my orignal EDA, and does not need anymore before being ready for the implementation of Machine Learning.
+# 
+# **Challenges and How to Address Them:**
+# 1. One challenge I forsee within my plan, is the use of a model I am not 100% familiar with. To combat this unfamiliarity I plan to do research to better understand its use, and to play around with it myself to get a feel for how it works.
+# 
+# 2. Another issue may come to how small the datasets are, luckily LSTM has hyperparameters which can be finely tuned to prevent overfitting or underfitting of the data. This will ensure that the LSTM has no issues with the datasets which have less entries.
+
+# # 5. Machine Learning Implementation Process
+
+# **Per Checkpoint 3's instructions _"You're not expected to actually implement machine learning in this checkpoint"_ therefore I will just be planning out my process.
+# 
+# #### 1. EDA
+# As mentioned previously, no further EDA will need to be done.
+# 
+# #### 2. Splitting the dataset into training and test sets
+# As mentioned previously, I will be splitting the data sets via a ratio of 80:20, where 80% will be used for training and 20% for testing. This ratio is optimal as it ensure there is enough training data to ensure accuracy of the model, as well as, ensuring enough testing data is available to verify the accuracy of the model.
+# 
+# #### 3. Data cleaning process using sci-kit learn pipeline
+# I will use the basics from what was learned in the regression lab, as well as, external research to ensure accurate **data imputation**. If I determine **Data Scaling and Normalization** are needed I will aim to follow the regression lab and if I run into errors will seek external help. Luckily, I will not have to worry about **Handling of Categorical Data** as my data is not categorical.
+# 
+# #### 4. Testing multiple algorithms and models
+# From my research I only plan to use the LSTM process which I layed out previously. I will be using it for all three datasets and will test using different parameters to ensure success, therefore the ratio's previously listed may change in this section due to testing. As of right now though, the process above will be my plan going forward.
+# 
+# #### 5. Evaluating the different models and choosing one
+# As started in the previous paragraph, I will be evaluating the models I create using various parameters, and thus choosing a model which best suits my needs using the optimal parameters. I plan to do this based on the accuracy of the prediction with the test data, the model with the best accuracy will be selected and the final model will use the same parameters that the optimal model has.
+
 # ## Resources and References
 # *What resources and references have you used for this project?*
 # 📝 <!-- Answer Below -->
 
-# In[2]:
+# In[18]:
 
 
 # ⚠️ Make sure you run this cell at the end of your notebook before every submission!
