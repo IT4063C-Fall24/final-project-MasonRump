@@ -89,7 +89,7 @@ from tensorflow.keras.layers import LSTM, Dense
 
 # Due to ongoing issues with the API I am going to be downloading the data into a CSV to use until support figures it out
 
-# In[6]:
+# In[2]:
 
 
 df_housing = pd.read_csv('dataSources/USSTHPI_API_DATA.csv')
@@ -282,11 +282,195 @@ plt.show()
 # #### 5. Evaluating the different models and choosing one
 # As started in the previous paragraph, I will be evaluating the models I create using various parameters, and thus choosing a model which best suits my needs using the optimal parameters. I plan to do this based on the accuracy of the prediction with the test data, the model with the best accuracy will be selected and the final model will use the same parameters that the optimal model has.
 
+# # 6. Prior Feedback and Updates 2
+
+# No feedback was given for checkpoint 2, though I did recieve full marks on all parts of the rubric which were in the instructions
+
+# # 7. Machine Learning In Use
+
+# 1. Grocery CPI
+
+# In[4]:
+
+
+df = pd.read_csv('dataSources/CPIgrocery.csv')
+df['DATE'] = pd.to_datetime(df['DATE'])
+df = df.sort_values('DATE')
+scaler = MinMaxScaler()
+df['CPI_scaled'] = scaler.fit_transform(df[['CPI']])
+
+def create_sequences(data, seq_length):
+    X, y = [], []
+    for i in range(len(data) - seq_length):
+        X.append(data[i:i + seq_length])
+        y.append(data[i + seq_length])
+    return np.array(X), np.array(y)
+
+seq_length = 12 
+data = df['CPI_scaled'].values
+X, y = create_sequences(data, seq_length)
+train_size = int(len(X) * 0.8)
+X_train, X_test = X[:train_size], X[train_size:]
+y_train, y_test = y[:train_size], y[train_size:]
+X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
+X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], 1))
+
+model = Sequential([LSTM(50, activation='relu', input_shape=(seq_length, 1)),Dense(1)])
+model.compile(optimizer='adam', loss='mse')
+model.fit(X_train, y_train, epochs=50, batch_size=32, validation_data=(X_test, y_test))
+
+predictions = model.predict(X_test)
+predictions_rescaled = scaler.inverse_transform(predictions)
+
+
+# Graphing of Model for Evaluation
+
+# In[5]:
+
+
+import matplotlib.pyplot as plt
+
+plt.plot(df['CPI'][-len(predictions):].values, label='Actual CPI')
+plt.plot(predictions_rescaled, label='Predicted CPI')
+plt.legend()
+plt.title('LSTM Predictions vs Actual CPI')
+plt.show()
+
+
+# While not 100% accurate this model did accuately follow the curves structure. This could be due to small sample size, but overall I am not unhappy with the outcome as machine learning is still a topic which I only have the basic knowledge of from this class.
+
+# 2. Using the above as a layout going forward, I will no use the LTSM set up on the gasPrices data.
+
+# In[7]:
+
+
+df_gas = pd.read_csv('dataSources/gasPrices.csv')
+df_gas['Date'] = pd.to_datetime(df_gas['Date'], format='%b-%Y')
+df_gas = df_gas.sort_values('Date')
+
+scaler_gas = MinMaxScaler()
+df_gas['Price_scaled'] = scaler_gas.fit_transform(df_gas[['U.S. All Grades All Formulations Retail Gasoline Prices (Dollars per Gallon)']])
+
+def create_sequences(data, seq_length):
+    X, y = [], []
+    for i in range(len(data) - seq_length):
+        X.append(data[i:i + seq_length])
+        y.append(data[i + seq_length])
+    return np.array(X), np.array(y)
+
+seq_length = 12 
+data_gas = df_gas['Price_scaled'].values
+X_gas, y_gas = create_sequences(data_gas, seq_length)
+train_size_gas = int(len(X_gas) * 0.8)
+X_train_gas, X_test_gas = X_gas[:train_size_gas], X_gas[train_size_gas:]
+y_train_gas, y_test_gas = y_gas[:train_size_gas], y_gas[train_size_gas:]
+X_train_gas = X_train_gas.reshape((X_train_gas.shape[0], X_train_gas.shape[1], 1))
+X_test_gas = X_test_gas.reshape((X_test_gas.shape[0], X_test_gas.shape[1], 1))
+
+model_gas = Sequential([LSTM(50, activation='relu', input_shape=(seq_length, 1)), Dense(1)])
+model_gas.compile(optimizer='adam', loss='mse')
+model_gas.fit(X_train_gas, y_train_gas, epochs=50, batch_size=32, validation_data=(X_test_gas, y_test_gas))
+
+predictions_gas = model_gas.predict(X_test_gas)
+predictions_rescaled_gas = scaler_gas.inverse_transform(predictions_gas.reshape(-1, 1))
+
+plt.figure(figsize=(10, 6))
+plt.plot(df_gas['U.S. All Grades All Formulations Retail Gasoline Prices (Dollars per Gallon)'][-len(predictions_gas):].values, label='Actual Gas Prices')
+plt.plot(predictions_rescaled_gas, label='Predicted Gas Prices')
+plt.legend()
+plt.title('LSTM Predictions vs Actual Gas Prices')
+plt.show()
+
+
+# Once again, the accuracy of the model is not perfect, but does follow the general trends of the real data, once again displaying success, and could be heightened in accuracy by use of more datapoints.
+
+# 3. Lastly, I will use the LTSM on the API data for housing.
+
+# In[8]:
+
+
+df_housing = pd.read_csv('dataSources/USSTHPI_API_DATA.csv')
+df_housing['DATE'] = pd.to_datetime(df_housing['DATE'])
+df_housing = df_housing.sort_values('DATE')
+
+scaler_housing = MinMaxScaler()
+df_housing['Price_scaled'] = scaler_housing.fit_transform(df_housing[['USSTHPI']])
+
+data_housing = df_housing['Price_scaled'].values
+X_housing, y_housing = create_sequences(data_housing, seq_length)
+
+train_size_housing = int(len(X_housing) * 0.8)
+X_train_housing, X_test_housing = X_housing[:train_size_housing], X_housing[train_size_housing:]
+y_train_housing, y_test_housing = y_housing[:train_size_housing], y_housing[train_size_housing:]
+X_train_housing = X_train_housing.reshape((X_train_housing.shape[0], X_train_housing.shape[1], 1))
+X_test_housing = X_test_housing.reshape((X_test_housing.shape[0], X_test_housing.shape[1], 1))
+
+model_housing = Sequential([LSTM(50, activation='relu', input_shape=(seq_length, 1)), Dense(1)])
+model_housing.compile(optimizer='adam', loss='mse')
+model_housing.fit(X_train_housing, y_train_housing, epochs=50, batch_size=32, validation_data=(X_test_housing, y_test_housing))
+
+predictions_housing = model_housing.predict(X_test_housing)
+predictions_rescaled_housing = scaler_housing.inverse_transform(predictions_housing.reshape(-1, 1))
+
+plt.figure(figsize=(10, 6))
+plt.plot(df_housing['USSTHPI'][-len(predictions_housing):].values, label='Actual Housing Prices')
+plt.plot(predictions_rescaled_housing, label='Predicted Housing Prices')
+plt.legend()
+plt.title('LSTM Predictions vs Actual Housing Prices')
+plt.show()
+
+
+# For housing the model over predicts the rate of increase, though it does follow the trend once again, as the true data does only show increase, just not as fast as the model predicts.
+
+# # 8. Final Visualization
+
+# This visualiztion will aim to answer the questions posed at the beginning of project. I will achieve this through the 
+# creation of a visualization containing the rate of change for all of the datasets.
+
+# In[10]:
+
+
+df_grocery['pct_change'] = df_grocery['CPI'].pct_change() * 100
+df_gas['pct_change'] = df_gas['U.S. All Grades All Formulations Retail Gasoline Prices (Dollars per Gallon)'].pct_change() * 100
+df_housing['pct_change'] = df_housing['USSTHPI'].pct_change() * 100
+
+plt.figure(figsize=(12, 6))
+plt.plot(df_grocery['DATE'], df_grocery['pct_change'], label='CPIgrocery % Change', color='blue')
+plt.plot(df_gas['Date'], df_gas['pct_change'], label='Gas Prices % Change', color='red')
+plt.plot(df_housing['DATE'], df_housing['pct_change'], label='Housing Price Index % Change', color='green')
+plt.title('Combined Percentage Change Over Time')
+plt.xlabel('Date')
+plt.ylabel('Percentage Change (%)')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+# Based off of the above visualization display the percentage change for each necessity category since the recession, here are my project questions and answers.
+# 
+# 1. Which necessity category has the highest inflation between groceries, gas, and housing since the great recession? 
+#     Overall, I would say it is definitely housing as accross the chart the green line (housing) is almost always above the y=0 meaning it is almost always inflating in values. 
+# 
+# 2. Which necessity category has the lowest inflation? 
+#     I would say, based off of the above visualization, the necessity category with the lowest inflation rate is groceries. This is due to the fact that it generally stays on the y=0 or goes slightly above or below, just barely going positive a but more than negative, indicating a slow inflation rate, in comparison to the other two.
+# 3. What time period saw the most inflation for each category?
+# 
+#     3a. Grocery - for grocery, the highest inflationary rate is indicated from 2020 to 2022 as there is a large spike from Covid in 2020, and it continues to trend positive (above y=0) after that point. This indicates the most inflation in that necessity category accross the whole visualization.
+# 
+#     3b. Gas - for gas, it is hard to tell due to the volatile rate of change which gas has, though I would say it is clear that gas experienced the most inflation between 2021 and 2023. This is clear by the largest spike, which towers over the rest in 2022, which charecterized this time periods rapid inflation as Covid restrictions were loosened and the need for gas was on the rise again.
+# 
+#     3c. Housing - for housing, unfortunately I would say from 2020 to present is the highest inflationary rate seen since the recession, as during this time period the data stays almost 100% above y=0 displaying a peristent and constant infaltionary change. 
+
 # ## Resources and References
 # *What resources and references have you used for this project?*
 # 📝 <!-- Answer Below -->
 
-# In[18]:
+# Data Sources: U.S. Energy Information Administration, Kaggle, FRED (Federal Reserve Bank of Saint Louis Economic Data)
+# 
+# Helpful Sources: Stack Overlfow, Previous Assignments, W3Schools
+
+# In[2]:
 
 
 # ⚠️ Make sure you run this cell at the end of your notebook before every submission!
